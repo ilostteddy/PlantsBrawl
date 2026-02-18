@@ -5,6 +5,15 @@
 
 #include "Scene.h"
 #include "MenuScene.h"
+#include "GameScene.h"
+#include "SceneManager.h"
+#include "SelectorScene.h"
+
+Scene* menu_scene = nullptr;
+Scene* game_scene = nullptr;
+Scene* selector_scene = nullptr;
+
+SceneManager scene_manager;
 
 int main() 
 {	
@@ -15,9 +24,11 @@ int main()
 	initgraph(800, 600, EW_SHOWCONSOLE);
 	BeginBatchDraw();
 
-	Scene* scene = new MenuScene(); // 创建一个菜单场景实例
+	menu_scene = new MenuScene();
+	game_scene = new GameScene();
+	selector_scene = new SelectorScene();
 
-	scene->on_enter(); // 调用场景的进入函数
+	scene_manager.set_current_scene(menu_scene);
 
 	while (true)
 	{
@@ -27,17 +38,17 @@ int main()
 		while (peekmessage(&msg))
 		{
 			// 在这里处理消息，例如按键、鼠标移动等
-			scene->on_input(msg); // 将消息传递给当前场景处理
+			scene_manager.on_input(msg); // 将消息传递给当前场景处理
 		}
 
 		// 03 处理数据
-		scene->on_update(); // 更新场景逻辑
+		scene_manager.on_update(); // 更新场景逻辑
 
 		// 04 渲染绘制
 		cleardevice();
 
 		FlushBatchDraw();
-		scene->on_draw(); // 绘制当前场景
+		scene_manager.on_draw(); // 绘制当前场景
 
 
 		DWORD frame_end_time = GetTickCount();

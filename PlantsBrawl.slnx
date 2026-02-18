@@ -3,5 +3,5 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="PlantsBrawl/PlantsBrawl.vcxproj" />
+  <Project Path="PlantsBrawl/PlantsBrawl.vcxproj" Id="13ec1256-c1b4-4b8c-9581-c4cc63906576" />
 </Solution>
