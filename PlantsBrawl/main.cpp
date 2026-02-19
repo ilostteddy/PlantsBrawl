@@ -3,11 +3,16 @@
 #include <windows.h>
 #include <conio.h>
 
+#pragma comment(lib, "winmm.lib")
+
+#include "util.h"
+#include "Atlas.h"
 #include "Scene.h"
 #include "MenuScene.h"
 #include "GameScene.h"
 #include "SceneManager.h"
 #include "SelectorScene.h"
+#include "Resources.h"  // 包含资源定义
 
 Scene* menu_scene = nullptr;
 Scene* game_scene = nullptr;
@@ -15,11 +20,14 @@ Scene* selector_scene = nullptr;
 
 SceneManager scene_manager;
 
+
 int main() 
 {	
 	// 01 初始化部分
 	ExMessage msg;
 	const int FPS = 60;
+
+	load_game_resources(); // 加载游戏资源，例如图片、动画等
 
 	initgraph(800, 600, EW_SHOWCONSOLE);
 	BeginBatchDraw();
