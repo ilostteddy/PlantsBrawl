@@ -72,8 +72,6 @@ IMAGE img_winner_bar;                      // 获胜玩家文本背景图片
 IMAGE img_avatar_peashooter;                // 豌豆射手头像图片
 IMAGE img_avatar_sunflower;                 // 龙日葵头像图片
 
-namespace
-{
 	// 水平翻转图集
 	void flip_atlas(Atlas& src, Atlas& dst)
 	{
@@ -82,10 +80,9 @@ namespace
 		{
 			IMAGE img_flpipped;
 			flip_image(src.get_image(i), &img_flpipped);
-			dst.add_image(img_flpipped);
+			dst.add_image(std::move(img_flpipped)); // 使用移动语义
 		}
 	}
-}
 
 void load_game_resources()
 {
@@ -127,7 +124,7 @@ void load_game_resources()
 	flip_atlas(atlas_peashooter_idle_right, atlas_peashooter_idle_left);
 	atlas_peashooter_run_right.load_from_file(_T("resources/peashooter_run_%d.png"), 5);
 	flip_atlas(atlas_peashooter_run_right, atlas_peashooter_run_left);
-	atlas_peashooter_attack_ex_right.load_from_file(_T("resources/peashooter_attack_stack_ex_%d.png"), 3);
+	atlas_peashooter_attack_ex_right.load_from_file(_T("resources/peashooter_attack_ex_%d.png"), 3);
 	flip_atlas(atlas_peashooter_attack_ex_right, atlas_peashooter_attack_ex_left);
 	atlas_peashooter_die_right.load_from_file(_T("resources/peashooter_die_%d.png"), 4);
 	flip_atlas(atlas_peashooter_die_right, atlas_peashooter_die_left);

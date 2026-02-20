@@ -13,6 +13,7 @@
 #include "SceneManager.h"
 #include "SelectorScene.h"
 #include "Resources.h"  // 包含资源定义
+#include "Vector2.h"
 
 Scene* menu_scene = nullptr;
 Scene* game_scene = nullptr;
@@ -29,8 +30,9 @@ int main()
 
 	load_game_resources(); // 加载游戏资源，例如图片、动画等
 
-	initgraph(800, 600, EW_SHOWCONSOLE);
-	BeginBatchDraw();
+	initgraph(640, 480, EX_SHOWCONSOLE);
+
+	BeginBatchDraw(); // 开始批量绘制模式，可以提高绘制效率，减少闪烁
 
 	menu_scene = new MenuScene();
 	game_scene = new GameScene();
@@ -40,7 +42,7 @@ int main()
 
 	while (true)
 	{
-		DWORD frame_start_time = GetTickCount();
+		DWORD frame_start_time = GetTickCount();   // 获取当前时间戳，单位为毫秒
 
 		// 02 读取操作
 		while (peekmessage(&msg))
@@ -50,15 +52,20 @@ int main()
 		}
 
 		// 03 处理数据
-		scene_manager.on_update(); // 更新场景逻辑
+		static DWORD last_tick_time = GetTickCount();  // 关键：static修饰的变量
+		DWORD current_tick_time = GetTickCount();  // 获取当前时间戳
+		DWORD delta_tick = current_tick_time - last_tick_time; // 计算与上次更新的时间差
+
+		scene_manager.on_update(delta_tick); // 更新场景逻辑
+
+		last_tick_time = current_tick_time; // 更新上次更新的时间戳
 
 		// 04 渲染绘制
-		cleardevice();
-
-		FlushBatchDraw();
+		cleardevice();  // 清空画布
 		scene_manager.on_draw(); // 绘制当前场景
+		FlushBatchDraw(); // 刷新绘制内容到屏幕
 
-
+		
 		DWORD frame_end_time = GetTickCount();
 		DWORD frame_delta_time = frame_end_time - frame_start_time;
 		if (frame_delta_time < 1000 / FPS)

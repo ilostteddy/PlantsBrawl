@@ -19,7 +19,7 @@ public:
 			std::cout << "Entering Game Scene" << std::endl;
 		};
 
-		void on_update() override 
+		void on_update(int delta) override 
 		{
 			std::cout << "Game Scene Updating....." << std::endl;
 		};

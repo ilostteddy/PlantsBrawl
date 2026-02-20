@@ -68,7 +68,7 @@ public:
 		}
 	}
 
-	void on_draw(int x, int y, IMAGE* img) // 绘制当前帧
+	void on_draw(int x, int y) // 绘制当前帧
 	{
 		putimage_alpha(x, y, atlas->get_image(idx_frame));
 	}
