@@ -8,9 +8,11 @@
 #include "Atlas.h"
 #include "Animation.h"
 #include "Camera.h"
+#include "Time.h"
 
 extern SceneManager scene_manager;
 extern Atlas atlas_peashooter_run_right;
+Time time_test;
 
 class MenuScene : public Scene
 {
@@ -21,6 +23,14 @@ public:
     void on_enter() override 
     {
 		std::cout << "Entering Menu Scene" << std::endl;
+		time_test.set_wait_time(3000); // 设置等待时间为3000毫秒（3秒）
+		time_test.set_one_shot(false); // 设置为多次触发
+        time_test.set_callback(
+            []() {
+                std::cout << "Time callback triggered" << std::endl;
+            }
+        );
+
         anim_peashooter_run.set_atlas(&atlas_peashooter_run_right);
         anim_peashooter_run.set_loop(true);
 		anim_peashooter_run.set_interval(100); // 设置帧间隔为100毫秒
@@ -33,10 +43,11 @@ public:
 
     void on_update(int delta) override 
     {
-        std::cout << "Menu Scene Updating....." << std::endl;
-        anim_peashooter_run.on_update(delta);
-		camera.on_update(delta); // 更新摄像机位置
+        camera.on_update(delta); // 更新摄像机位置
+		time_test.on_update(delta); // 更新定时器状态
 
+        anim_peashooter_run.on_update(delta);
+		
     };
 
     void on_draw() override 
@@ -52,7 +63,8 @@ public:
     {
         if (msg.message == WM_KEYDOWN)
         {
-            scene_manager.switch_to(SceneManager::SceneType::Game);
+			// 当按下任意键时，摄像机开始抖动
+			camera.shake(5.0f, 500); // 设置震动强度为5.0，持续时间为500毫秒
         }
     };
 

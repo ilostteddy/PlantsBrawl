@@ -21,7 +21,7 @@ public:
 
 		void on_update(int delta) override 
 		{
-			std::cout << "Game Scene Updating....." << std::endl;
+
 		};
 
 		void on_draw() override 
