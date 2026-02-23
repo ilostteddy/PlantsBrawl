@@ -21,6 +21,7 @@ Scene* selector_scene = nullptr;
 
 SceneManager scene_manager;
 
+Camera main_camera;
 
 int main() 
 {	
@@ -30,7 +31,7 @@ int main()
 
 	load_game_resources(); // 加载游戏资源，例如图片、动画等
 
-	initgraph(640, 480, EX_SHOWCONSOLE);
+	initgraph(1280, 720);
 
 	BeginBatchDraw(); // 开始批量绘制模式，可以提高绘制效率，减少闪烁
 
@@ -62,7 +63,7 @@ int main()
 
 		// 04 渲染绘制
 		cleardevice();  // 清空画布
-		scene_manager.on_draw(); // 绘制当前场景
+		scene_manager.on_draw(main_camera); // 绘制当前场景
 		FlushBatchDraw(); // 刷新绘制内容到屏幕
 
 		

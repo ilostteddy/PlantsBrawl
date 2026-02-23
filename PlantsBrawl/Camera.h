@@ -58,3 +58,4 @@ private:
 	bool is_shaking = false; // 是否正在震动
 	float shake_strength = 0; // 震动强度
 };
+

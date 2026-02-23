@@ -16,7 +16,7 @@ public:
 
 		void on_enter() override 
 		{
-			std::cout << "Entering Game Scene" << std::endl;
+	
 		};
 
 		void on_update(int delta) override 
@@ -24,22 +24,19 @@ public:
 
 		};
 
-		void on_draw() override 
+		void on_draw(const Camera& camera) override
 		{
-			outtextxy(100, 100, _T("This is the Game Scene!"));
+
 		};
 
 		void on_input(const ExMessage& msg) override 
 		{
-			if (msg.message == WM_KEYDOWN)
-			{
-				scene_manager.switch_to(SceneManager::SceneType::Menu);
-			}
+
 		};
 
 		void on_exit() override 
 		{
-			std::cout << "Exiting Game Scene" << std::endl;
+
 		};
 
 private:
