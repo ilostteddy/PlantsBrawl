@@ -1,13 +1,15 @@
-#pragma once
+﻿#pragma once
 
 #include <iostream>
 #include <graphics.h>
+#include <windows.h>
 
 #include "Scene.h"
 #include "SceneManager.h"
 #include "Resources.h"
 #include "Atlas.h"
 #include "Animation.h"
+
 
 extern SceneManager scene_manager;
 
@@ -70,19 +72,97 @@ public:
 
 	void on_update(int delta) override
 	{
+		animation_peashooter.on_update(delta);
+		animation_sunflower.on_update(delta);	
+
+		selector_background_scroll_offset_x += 5;
+		if (selector_background_scroll_offset_x >= img_peashooter_selector_background_left.getwidth())
+		{
+			selector_background_scroll_offset_x = 0;
+		}
+
 
 	};
 
 	void on_draw(const Camera& camera) override
 	{
+		IMAGE* img_p1_selector_background = nullptr;
+		IMAGE* img_p2_selector_background = nullptr;
+
+		switch (player_type_1)
+		{
+		case PlayerType::Peashooter:
+			img_p1_selector_background = &img_peashooter_selector_background_right;
+			break;
+		case PlayerType::Sunflower:
+			img_p1_selector_background = &img_sunflower_selector_background_right;
+			break;
+		default:
+			img_p1_selector_background = &img_peashooter_selector_background_right;
+			break;
+		}
+
+		switch (player_type_2)
+		{
+		case PlayerType::Peashooter:
+			img_p2_selector_background = &img_peashooter_selector_background_left;
+			break;
+		case PlayerType::Sunflower:
+			img_p2_selector_background = &img_sunflower_selector_background_left;
+			break;
+		default:
+			img_p2_selector_background = &img_peashooter_selector_background_left;
+			break;
+		}
+
 		putimage(0, 0, &img_selector_background);
+
+		// 绘制滚动背景
+		putimage_alpha(selector_background_scroll_offset_x - img_p1_selector_background->getwidth(), 0, img_p1_selector_background);
+		putimage_alpha(selector_background_scroll_offset_x, 0,
+			img_p1_selector_background->getwidth() - selector_background_scroll_offset_x, 0, img_p1_selector_background, 0, 0);
+		putimage_alpha(getwidth() - img_p2_selector_background->getwidth(), 0, img_p2_selector_background->getwidth() -
+			selector_background_scroll_offset_x, 0, img_p2_selector_background, selector_background_scroll_offset_x, 0);
+		putimage_alpha(getwidth() - selector_background_scroll_offset_x, 0, img_p2_selector_background);
+
 
 		putimage_alpha(pos_img_VS.x, pos_img_VS.y, &img_VS);
 
 		putimage_alpha(pos_img_1P.x, pos_img_1P.y, &img_1P);
 		putimage_alpha(pos_img_2P.x, pos_img_2P.y, &img_2P);
+
+
 		putimage_alpha(pos_img_1P_gravestone.x, pos_img_1P_gravestone.y, &img_gravestone_right);
 		putimage_alpha(pos_img_2P_gravestone.x, pos_img_2P_gravestone.y, &img_gravestone_left);
+
+		// 根据玩家选择的角色类型绘制对应的动画
+		switch (player_type_1)
+		{
+		case PlayerType::Peashooter:
+			animation_peashooter.on_draw(camera, pos_animation_1P.x, pos_animation_1P.y);
+			pos_img_1P_name.x = pos_img_1P_gravestone.x + (img_gravestone_right.getwidth() - textwidth(str_peashooter_name)) / 2;
+			outtextxy_shaded(pos_img_1P_name.x, pos_img_1P_name.y, str_peashooter_name);
+			break;
+		case PlayerType::Sunflower:
+			animation_sunflower.on_draw(camera, pos_animation_1P.x, pos_animation_1P.y);
+			pos_img_1P_name.x = pos_img_1P_gravestone.x + (img_gravestone_right.getwidth() - textwidth(str_sunflower_name)) / 2;
+			outtextxy_shaded(pos_img_1P_name.x, pos_img_1P_name.y, str_sunflower_name);
+			break;
+		}
+
+		switch (player_type_2)
+		{
+		case PlayerType::Peashooter:
+			animation_peashooter.on_draw(camera, pos_animation_2P.x, pos_animation_2P.y);
+			pos_img_2P_name.x = pos_img_2P_gravestone.x + (img_gravestone_left.getwidth() - textwidth(str_peashooter_name)) / 2;
+			outtextxy_shaded(pos_img_2P_name.x, pos_img_2P_name.y, str_peashooter_name);
+			break;
+		case PlayerType::Sunflower:
+			animation_sunflower.on_draw(camera, pos_animation_2P.x, pos_animation_2P.y);
+			pos_img_2P_name.x = pos_img_2P_gravestone.x + (img_gravestone_left.getwidth() - textwidth(str_sunflower_name)) / 2;
+			outtextxy_shaded(pos_img_2P_name.x, pos_img_2P_name.y, str_sunflower_name);
+			break;
+		}
 
 		putimage_alpha(pos_img_1P_desc.x, pos_img_1P_desc.y, &img_1P_desc);
 		putimage_alpha(pos_img_2P_desc.x, pos_img_2P_desc.y, &img_2P_desc);
@@ -92,13 +172,80 @@ public:
 
 	void on_input(const ExMessage& msg) override
 	{
+		switch (msg.message)
+		{
+		case WM_KEYDOWN:
+			switch (msg.vkcode)
+			{
+				// 'A'
+			case 0x41:
+				is_btn_1P_left_down = true;
+				break;
+				// 'D'
+			case 0x44:
+				is_btn_1P_right_down = true;
+				break;
+				// '←'
+			case VK_LEFT:
+				is_btn_2P_left_down = true;
+				break;
+				// '→'
+			case VK_RIGHT:
+				is_btn_2P_right_down = true;
+				break;
+			}
+			break;
 
+		case WM_KEYUP:
+			switch (msg.vkcode)
+			{
+				// 'A'
+			case 0x41:
+				is_btn_1P_left_down = false;
+				player_type_1 = (PlayerType) (((int)PlayerType::Invalid + (int)player_type_1 - 1) % (int)PlayerType::Invalid); // 切换 1P 角色类型
+				mciSendString(_T("play ui_switch from 0"), NULL, 0, NULL);
+				break;
+				// 'D'
+			case 0x44:
+				is_btn_1P_right_down = false;
+				player_type_1 = (PlayerType) (((int)player_type_1 + 1) % (int)PlayerType::Invalid); // 切换 1P 角色类型
+				mciSendString(_T("play ui_switch from 0"), NULL, 0, NULL);
+				break;
+				// '←'
+			case VK_LEFT:
+				is_btn_2P_left_down = false;
+				player_type_2 = (PlayerType)(((int)PlayerType::Invalid + (int)player_type_2 - 1) % (int)PlayerType::Invalid); // 切换 2P 角色类型
+				mciSendString(_T("play ui_switch from 0"), NULL, 0, NULL);
+				break;
+				// '→'
+			case VK_RIGHT:
+				is_btn_2P_right_down = false;
+				player_type_2 = (PlayerType)(((int)player_type_2 + 1) % (int)PlayerType::Invalid); // 切换 2P 角色类型
+				mciSendString(_T("play ui_switch from 0"), NULL, 0, NULL);
+				break;
+			}
+			break;
+
+		default:
+			break;
+		}
 	};
 
 	void on_exit() override
 	{
 
 	};
+ 
+private:
+	enum class PlayerType
+	{
+		Peashooter = 0,
+		Sunflower,
+		Invalid
+	};
+
+	PlayerType player_type_1 = PlayerType::Peashooter; // 1P 选择的角色类型
+	PlayerType player_type_2 = PlayerType::Sunflower; // 2P 选择的角色类型
 
 private:
 	POINT pos_img_VS = { 0, 0 };                  // VS 艺术字图片位置
@@ -121,4 +268,23 @@ private:
 	Animation animation_peashooter;
 	Animation animation_sunflower;
 
+	LPCTSTR str_peashooter_name = _T("婉逗射手");      // 婉逗射手角色名
+	LPCTSTR str_sunflower_name = _T("龙日葵");        // 龙日葵角色名
+
+	int selector_background_scroll_offset_x = 0;	// 标识竖直线条在水平方向上的滚动距离
+
+	bool is_btn_1P_left_down = false;      // 1P 向左切换按钮是否按下
+	bool is_btn_1P_right_down = false;     // 1P 向右切换按钮是否按下
+	bool is_btn_2P_left_down = false;      // 2P 向左切换按钮是否按下
+	bool is_btn_2P_right_down = false;     // 2P 向右切换按钮是否按下
+
+private:
+	// 绘制带阴影的文本
+	void outtextxy_shaded(int x, int y, LPCTSTR str)
+	{
+		settextcolor(RGB(45, 45, 45));
+		outtextxy(x + 3, y + 3, str);
+		settextcolor(RGB(255, 255, 255));
+		outtextxy(x, y, str);
+	}
 };

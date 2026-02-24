@@ -33,6 +33,9 @@ int main()
 
 	initgraph(1280, 720);
 
+	settextstyle(24, 0, _T("Flx")); // 设置全局文本样式，使用加载的 Flx 字体
+	setbkmode(TRANSPARENT); // 设置文本背景模式为透明
+
 	BeginBatchDraw(); // 开始批量绘制模式，可以提高绘制效率，减少闪烁
 
 	menu_scene = new MenuScene();
