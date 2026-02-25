@@ -7,6 +7,7 @@
 
 #include "util.h"
 #include "Atlas.h"
+#include "Platform.h"
 #include "Scene.h"
 #include "MenuScene.h"
 #include "GameScene.h"
@@ -22,6 +23,7 @@ Scene* selector_scene = nullptr;
 SceneManager scene_manager;
 
 Camera main_camera;
+std::vector<Platform> platform_list;
 
 int main() 
 {	

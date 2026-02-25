@@ -164,11 +164,29 @@ public:
 			break;
 		}
 
+		// 左右按钮
+		putimage_alpha(pos_1P_selector_btn_left.x, pos_1P_selector_btn_left.y,
+			is_btn_1P_left_down ? &img_1P_selector_btn_down_left : &img_1P_selector_btn_idle_left);
+
+		putimage_alpha(pos_1P_selector_btn_right.x, pos_1P_selector_btn_right.y,
+			is_btn_1P_right_down ? &img_1P_selector_btn_down_right : &img_1P_selector_btn_idle_right);
+
+		putimage_alpha(pos_2P_selector_btn_left.x, pos_2P_selector_btn_left.y,
+			is_btn_2P_left_down ? &img_2P_selector_btn_down_left : &img_2P_selector_btn_idle_left);
+
+		putimage_alpha(pos_2P_selector_btn_right.x, pos_2P_selector_btn_right.y,
+			is_btn_2P_right_down ? &img_2P_selector_btn_down_right : &img_2P_selector_btn_idle_right);
+
+
+		// 键位描述和提示文本
 		putimage_alpha(pos_img_1P_desc.x, pos_img_1P_desc.y, &img_1P_desc);
 		putimage_alpha(pos_img_2P_desc.x, pos_img_2P_desc.y, &img_2P_desc);
 
+		// 选角界面提示文本
 		putimage_alpha(pos_img_tip.x, pos_img_tip.y, &img_selector_tip);
 	};
+
+
 
 	void on_input(const ExMessage& msg) override
 	{
@@ -222,6 +240,10 @@ public:
 				is_btn_2P_right_down = false;
 				player_type_2 = (PlayerType)(((int)player_type_2 + 1) % (int)PlayerType::Invalid); // 切换 2P 角色类型
 				mciSendString(_T("play ui_switch from 0"), NULL, 0, NULL);
+				break;
+			case VK_RETURN:
+				scene_manager.switch_to(SceneManager::SceneType::Game); // 切换到游戏场景
+				mciSendString(_T("play ui_confirm from 0"), NULL, 0, NULL);
 				break;
 			}
 			break;
