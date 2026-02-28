@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <iostream>
 #include <graphics.h>
@@ -79,11 +79,32 @@ public:
 		// 山脉和天空背景绘制
 		putimage_alpha(pos_img_sky.x, pos_img_sky.y, &img_sky);
 		putimage_alpha(pos_img_sky.x, pos_img_sky.y, &img_hills);
+
+		for (Platform& platform : platform_list)
+		{
+			platform.on_draw(camera);
+		}
+
+		if (is_debug)
+		{
+			settextcolor(RED);
+			outtextxy(15, 15, _T("已开启调试模式，按 Q 键关闭"));
+		}
+
 	};
 
 	void on_input(const ExMessage& msg) override 
 	{
-
+		switch (msg.message)
+		{
+		case WM_KEYUP:
+			// Q键切换DEBUG模式
+			if (msg.vkcode == 'Q')
+				is_debug = !is_debug;
+			break;
+		default:
+			break;
+		}
 	};
 
 	void on_exit() override 

@@ -16,6 +16,8 @@
 #include "Resources.h"  // 包含资源定义
 #include "Vector2.h"
 
+bool is_debug = false;
+
 Scene* menu_scene = nullptr;
 Scene* game_scene = nullptr;
 Scene* selector_scene = nullptr;

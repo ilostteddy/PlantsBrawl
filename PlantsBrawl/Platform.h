@@ -3,6 +3,8 @@
 #include "Camera.h"
 #include "util.h"
 
+extern bool is_debug;
+
 class Platform
 {
 public:
@@ -24,6 +26,12 @@ public:
 	void on_draw(const Camera& camera)
 	{
 		putimage_alpha(camera, render_position.x, render_position.y, img);
+
+		if (is_debug)
+		{
+			setlinecolor(RED);
+			line(camera, (int)shape.left, (int)shape.y, (int)shape.right, (int)shape.y);
+		}
 	};
 
 private:
