@@ -15,12 +15,16 @@
 #include "SelectorScene.h"
 #include "Resources.h"  // 包含资源定义
 #include "Vector2.h"
+#include "Player.h"
 
 bool is_debug = false;
 
 Scene* menu_scene = nullptr;
 Scene* game_scene = nullptr;
 Scene* selector_scene = nullptr;
+
+Player* player_1 = nullptr;
+Player* player_2 = nullptr;
 
 SceneManager scene_manager;
 

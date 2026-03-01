@@ -8,12 +8,17 @@
 #include "Scene.h"
 #include "SceneManager.h"
 #include "Platform.h"
+#include "PeashoterPlayer.h"
+#include "SunflowerPlayer.h"
 
 extern std::vector<Platform> platform_list;
 extern IMAGE img_sky;
 extern IMAGE img_hills;
 extern IMAGE img_platform_large;
 extern IMAGE img_platform_small;
+
+extern Player* player_1;
+extern Player* player_2;
 
 extern Camera main_camera;
 
@@ -71,7 +76,8 @@ public:
 
 	void on_update(int delta) override 
 	{
-
+		player_1->on_update(delta);
+		player_2->on_update(delta);
 	};
 
 	void on_draw(const Camera& camera) override
