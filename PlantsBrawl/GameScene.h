@@ -32,7 +32,11 @@ public:
 	~GameScene() = default;
 
 	void on_enter() override 
-	{
+	{	
+		// 初始化玩家位置
+		player_1->set_position(200, 50);
+		player_2->set_position(975, 50);
+
 		// 计算天空和山脉图片的居中位置
 		pos_img_sky.x = (getwidth() - img_sky.getwidth()) / 2;
 		pos_img_sky.y = (getheight() - img_sky.getheight()) / 2;
@@ -73,6 +77,7 @@ public:
 		small_platform_3.shape.left = (float)small_platform_3.render_position.x + 40;
 		small_platform_3.shape.right = (float)small_platform_3.render_position.x + img_platform_small.getwidth() - 40;
 		small_platform_3.shape.y = (float)small_platform_3.render_position.y + img_platform_small.getheight() / 2;
+
 	};
 
 	void on_update(int delta) override 

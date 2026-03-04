@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <graphics.h>
 #include <windows.h>
@@ -62,4 +62,5 @@ inline void flip_image(IMAGE* sre, IMAGE* dst)
 			dst_buffer[idx_dst] = src_buffer[idx_src];
 		}
 	}
+
 }
