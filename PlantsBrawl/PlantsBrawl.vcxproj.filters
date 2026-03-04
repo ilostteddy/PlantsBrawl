@@ -77,5 +77,8 @@
     <ClInclude Include="SunflowerPlayer.h">
       <Filter>头文件\Player</Filter>
     </ClInclude>
+    <ClInclude Include="Player_id.h">
+      <Filter>头文件\Player</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

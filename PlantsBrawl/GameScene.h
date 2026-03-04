@@ -10,6 +10,7 @@
 #include "Platform.h"
 #include "PeashoterPlayer.h"
 #include "SunflowerPlayer.h"
+#include "Vector2.h"
 
 extern std::vector<Platform> platform_list;
 extern IMAGE img_sky;
@@ -97,10 +98,15 @@ public:
 			outtextxy(15, 15, _T("已开启调试模式，按 Q 键关闭"));
 		}
 
+		player_1->on_draw(camera);
+		player_2->on_draw(camera);
 	};
 
 	void on_input(const ExMessage& msg) override 
 	{
+		player_1->on_input(msg);
+		player_2->on_input(msg);
+
 		switch (msg.message)
 		{
 		case WM_KEYUP:

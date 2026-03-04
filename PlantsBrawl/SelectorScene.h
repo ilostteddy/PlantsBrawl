@@ -11,6 +11,7 @@
 #include "Animation.h"
 #include "PeashoterPlayer.h"
 #include "SunflowerPlayer.h"
+#include "Player_id.h"
 
 extern Player* player_1;
 extern Player* player_2;
@@ -263,11 +264,13 @@ public:
 		{
 		case PlayerType::Peashooter:
 			player_1 = new PeashooterPlayer();
+
 			break;
 		case PlayerType::Sunflower:
 			player_1 = new SunflowerPlayer();
 			break;
 		}
+		player_1->set_id(Player_id::P1); // 设置 1P 玩家序号
 
 		switch (player_type_2)
 		{
@@ -278,6 +281,7 @@ public:
 			player_2 = new SunflowerPlayer();
 			break;
 		}
+		player_2->set_id(Player_id::P2); // 设置 2P 玩家序号
 	};
  
 private:
