@@ -26,6 +26,8 @@ public:
 		{
 			is_facing_right = direction > 0;
 			current_animation = is_facing_right ? &animation_run_right : &animation_run_left; // 根据方向选择跑步动画
+			float distance = run_velocity * delta * direction; // 计算移动距离
+			on_run(distance);
 		}
 		else
 		{
@@ -33,7 +35,7 @@ public:
 		}
 
 		current_animation->on_update(delta); // 更新当前动画状态
-	}; 
+	};
 
 	virtual void on_input(const ExMessage& msg) // 场景输入事件时调用，参数为输入事件消息
 	{
@@ -130,8 +132,17 @@ public:
 		position.y = y;
 	}
 
+	void on_run(float distance)
+	{
+		position.x += distance; // 根据移动距离更新角色位置
+	}
+
 protected:
 	Vector2 position;  // 角色位置
+	Vector2 velocity;  // 角色速度
+
+	const float gravity = 1.6e-3f; // 重力加速度，单位为像素/毫秒^2 （修复：去掉空格，合法的浮点字面量）
+	const float run_velocity = 0.5f; // 跑步速度，单位为像素/毫秒
 
 	Animation animation_idle_left;   // 向左默认动画
 	Animation animation_idle_right;  // 向右默认动画
