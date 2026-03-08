@@ -24,7 +24,10 @@ public:
 		animation_run_left.set_interval(75);
 		animation_run_right.set_interval(75);
 
+		size.x = 96; // 设置角色宽度
+		size.y = 96; // 设置角色高度
 	};
+
 	~PeashooterPlayer() = default;
 
 	void on_update(int delta_time) override
