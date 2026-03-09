@@ -214,7 +214,7 @@ protected:
 	Animation* current_animation = nullptr; // 当前动画指针
 
 	Player_id id = Player_id::P1; // 玩家序号 ID
-
+	 
 	bool if_leftkey_down = false;  // 是否按下左键
 	bool if_rightkey_down = false; // 是否按下右键
 
