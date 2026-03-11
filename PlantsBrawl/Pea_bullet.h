@@ -2,11 +2,29 @@
 
 #include "Bullet.h"
 #include "Animation.h"
+#include "Resources.h"
+#include "util.h"
 
 class Pea_bullet : public Bullet
 {
 public:
-	Pea_bullet() = default;
+    Pea_bullet()
+    {
+        size.x = 64; // 设置子弹宽度
+        size.y = 64; // 设置子弹高度
+		damage = 10; // 设置子弹伤害
+
+        animation_break.set_atlas(&atlas_pea_break); // 设置破碎动画图集
+        animation_break.set_loop(false); // 破碎动画不循环播放
+		animation_break.set_interval(100); // 设置破碎动画帧间隔为100毫秒
+
+        animation_break.set_callback([&]() // animation的回调函数
+            {
+                can_remove = true;
+            }
+        );
+    };
+
 	~Pea_bullet() = default;
 
     void on_collide() override
@@ -44,7 +62,10 @@ public:
 
     void on_draw(const Camera& camera) override
     {
-
+        if (valid)
+			putimage_alpha(camera, (int)position.x, (int)position.y, &img_pea); // 绘制豌豆子弹
+        else
+			animation_break.on_draw(camera, (int)position.x, (int)position.y); // 绘制破碎动画
     }
 
 private:
