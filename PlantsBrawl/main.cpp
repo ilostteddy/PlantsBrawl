@@ -16,6 +16,7 @@
 #include "Resources.h"  // 包含资源定义
 #include "Vector2.h"
 #include "Player.h"
+#include "Bullet.h"
 
 bool is_debug = false;
 
@@ -29,7 +30,9 @@ Player* player_2 = nullptr;
 SceneManager scene_manager;
 
 Camera main_camera;
+
 std::vector<Platform> platform_list;
+std::vector<Bullet*> bullet_list;
 
 int main() 
 {	

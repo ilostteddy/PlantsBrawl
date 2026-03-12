@@ -10,7 +10,9 @@
 #include "Player_id.h"
 #include "Animation.h"
 #include "Platform.h"
+#include "Time.h"
 
+extern std::vector<Bullet*> bullet_list; // 声明子弹列表，供Player类使用
 extern std::vector<Platform> platform_list; // 声明平台列表，供Player类使用
 
 class Player
@@ -19,6 +21,15 @@ public:
 	Player()
 	{
 		current_animation = &animation_idle_right; // 默认朝右站立
+
+		timer_attack_cd.set_wait_time(attack_cd);
+		timer_attack_cd.set_one_shot(true);
+		timer_attack_cd.set_callback([&]()
+			{
+				can_attack = true; // 攻击冷却结束后允许攻击
+			}
+		);
+
 	};
 
 	~Player() = default;
@@ -40,6 +51,8 @@ public:
 		}
 
 		current_animation->on_update(delta); // 更新当前动画状态
+
+		timer_attack_cd.on_update(delta); // 更新攻击冷却计时器状态
 
 		move_and_collide(delta); // 更新位置并处理碰撞
 	};
@@ -78,6 +91,22 @@ public:
 				case 0x57:
 					on_jump(); 
 					break;
+				case 0x46:
+					if (can_attack)
+					{
+						std::cout << "P1普通攻击！" << std::endl;
+						on_attack();
+						can_attack = false;
+						timer_attack_cd.restart();
+					}
+					break;
+				case 0x47:
+					if (mp >= 100)
+					{
+						on_attack_ex();
+						mp = 0;
+					}
+					break;
 				}
 				break;
 			case Player_id::P2:
@@ -93,6 +122,22 @@ public:
 					break;
 				case VK_UP:
 					on_jump();
+					break;
+				case VK_OEM_PERIOD:
+					if (can_attack)
+					{
+						std::cout << "P2普通攻击！" << std::endl;
+						on_attack();
+						can_attack = false;
+						timer_attack_cd.restart();
+					}
+					break;
+				case VK_OEM_2:
+					if (mp >= 100)
+					{
+						on_attack_ex();
+						mp = 0;
+					}
 					break;
 				}
 				break;
@@ -134,7 +179,6 @@ public:
 			}
 			break;
 		default:
-			std::cout << "未处理的输入消息类型：" << msg.message << std::endl;
 			break;
 		};
 	}; 
@@ -166,6 +210,21 @@ public:
 			return; // 如果垂直速度不为0，说明角色正在空中，不能再次跳跃
 		velocity.y += jump_velocity; // 设置垂直速度为负值，使角色向上跳跃
 	}
+
+	virtual void on_attack()
+	{
+		if (can_attack)
+		{
+			can_attack = false;
+			timer_attack_cd.restart();
+		}
+	}
+
+	virtual void on_attack_ex()
+	{
+
+	}
+
 
 protected:
 	void move_and_collide(int delta)
@@ -219,4 +278,11 @@ protected:
 	bool if_rightkey_down = false; // 是否按下右键
 
 	bool is_facing_right = true; // 是否面向右边，默认为true
+
+	int attack_cd = 500; // 攻击冷却时间，单位为毫秒
+	bool can_attack = true; // 是否可以攻击
+	Time timer_attack_cd; // 攻击冷却计时器
+
+	int hp = 100; // 角色生命值
+	int mp = 0; // 角色魔法值
 };
