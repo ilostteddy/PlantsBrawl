@@ -9,7 +9,9 @@
 #include "util.h"
 #include "Pea_bullet.h"
 #include "Vector2.h"
+#include "Time.h"
 
+extern Camera main_camera;
 
 class PeashooterPlayer : public Player
 {
@@ -21,15 +23,37 @@ public:
 		animation_idle_right.set_atlas(&atlas_peashooter_idle_right);
 		animation_run_left.set_atlas(&atlas_peashooter_run_left);
 		animation_run_right.set_atlas(&atlas_peashooter_run_right);
+		animation_attack_ex_left.set_atlas(&atlas_peashooter_attack_ex_left);
+		animation_attack_ex_right.set_atlas(&atlas_peashooter_attack_ex_right);
 
 		// 初始化动画帧间隔
 		animation_idle_left.set_interval(75);
 		animation_idle_right.set_interval(75);
 		animation_run_left.set_interval(75);
 		animation_run_right.set_interval(75);
+		animation_attack_ex_left.set_interval(75);
+		animation_attack_ex_right.set_interval(75);
 
 		size.x = 96; // 设置角色宽度
 		size.y = 96; // 设置角色高度
+
+		// 初始化攻击状态定时器
+		timer_attack_ex.set_wait_time(attack_ex_duration);
+		timer_attack_ex.set_one_shot(true);
+		timer_attack_ex.set_callback([&]()
+			{
+				is_attacking_ex = false; // 特殊攻击结束后重置状态
+			});
+
+		// 特殊攻击状态下发射子弹的定时器
+		timer_spwan_pea_ex.set_wait_time(100);
+		timer_spwan_pea_ex.set_callback	([&]()
+			{
+				spawn_pea_bullet(speed_pea_ex); // 生成特殊攻击豌豆子弹
+			});
+
+		// 普攻CD
+		attack_cd = 100;
 	};
 
 	~PeashooterPlayer() = default;
@@ -37,6 +61,13 @@ public:
 	void on_update(int delta_time) override
 	{
 		Player::on_update(delta_time); // 调用基类的更新方法，处理基本的动画切换逻辑
+
+		if (is_attacking_ex)
+		{
+			main_camera.shake(5, 100); // 特殊攻击时摄像机震动，参数为震动强度和持续时间
+			timer_attack_ex.on_update(delta_time); // 更新特殊攻击状态定时器
+			timer_spwan_pea_ex.on_update(delta_time); // 更新特殊攻击子弹发射定时器
+		}
 	};
 
 	void on_input(const ExMessage& msg) override
@@ -61,10 +92,24 @@ public:
 		}
 	};
 
+	void on_attack_ex() override
+	{
+		is_attacking_ex = true; // 进入特殊攻击状态
+		timer_attack_ex.restart(); // 重置特殊攻击状态定时器
+
+		is_facing_right ? animation_attack_ex_right.reset() : animation_attack_ex_left.reset(); // 重置特殊攻击动画
+		
+		mciSendString(_T("play pea_shoot_ex from 0"), NULL, 0, NULL);
+	};
+
 
 private:
 	const float speed_pea = 0.75f;
 	const float speed_pea_ex = 1.0f;
+	const int attack_ex_duration = 2500; // 特殊攻击持续时间，单位为毫秒
+
+	Time timer_attack_ex;	// 特殊攻击状态定时器
+	Time timer_spwan_pea_ex;	//豌豆子弹发射定时器
 
 private:
 	void spawn_pea_bullet(float speed)

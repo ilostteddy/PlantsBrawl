@@ -11,6 +11,7 @@
 #include "Animation.h"
 #include "Platform.h"
 #include "Time.h"
+#include "Bullet.h"
 
 extern std::vector<Bullet*> bullet_list; // 声明子弹列表，供Player类使用
 extern std::vector<Platform> platform_list; // 声明平台列表，供Player类使用
@@ -201,12 +202,14 @@ public:
 
 	void on_run(float distance)
 	{
+		if (is_attacking_ex)
+			return;
 		position.x += distance; // 根据移动距离更新角色位置
 	}
 
 	void on_jump()
 	{
-		if (velocity.y !=0)
+		if (velocity.y !=0 || is_attacking_ex)
 			return; // 如果垂直速度不为0，说明角色正在空中，不能再次跳跃
 		velocity.y += jump_velocity; // 设置垂直速度为负值，使角色向上跳跃
 	}
@@ -269,6 +272,8 @@ protected:
 	Animation animation_idle_right;  // 向右默认动画
 	Animation animation_run_left;    // 向左跑步动画
 	Animation animation_run_right;   // 向右跑步动画
+	Animation animation_attack_ex_left; // 大招向左攻击动画
+	Animation animation_attack_ex_right; // 大招向右攻击动画
 
 	Animation* current_animation = nullptr; // 当前动画指针
 
@@ -279,9 +284,11 @@ protected:
 
 	bool is_facing_right = true; // 是否面向右边，默认为true
 
-	int attack_cd = 500; // 攻击冷却时间，单位为毫秒
-	bool can_attack = true; // 是否可以攻击
-	Time timer_attack_cd; // 攻击冷却计时器
+	int attack_cd = 500; // 普通攻击冷却时间，单位为毫秒
+	bool can_attack = true; // 是否可以释放普通攻击
+	Time timer_attack_cd; // 普通攻击冷却计时器
+
+	bool is_attacking_ex = false; // 是否正在释放特殊攻击
 
 	int hp = 100; // 角色生命值
 	int mp = 0; // 角色魔法值
