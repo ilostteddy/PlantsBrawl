@@ -1,5 +1,6 @@
-#pragma once
+﻿#pragma once
 
+#include <iostream>
 #include "Bullet.h"
 #include "Animation.h"
 #include "Resources.h"
@@ -65,7 +66,10 @@ public:
 	void on_draw(const Camera& camera) override
 	{
 		if (valid)
+		{
 			animation_idle.on_draw(camera, (int)position.x, (int)position.y);
+			std::cout << "太阳子弹绘制" << std::endl;
+		}
 		else
 			animation_explode.on_draw(camera, 
 				(int)(position.x + explosion_render_offset.x), 

@@ -5,6 +5,11 @@
 #include "Resources.h"
 #include "Player.h"
 #include "Vector2.h"
+#include "Sun_bullet.h"
+#include "Sun_bullet_ex.h"
+
+extern Player* player_1;
+extern Player* player_2;
 
 class SunflowerPlayer : public Player
 {
@@ -82,7 +87,7 @@ public:
 
 	void on_attack() override
 	{
-		Bullet* bullet = new Bullet();
+		Bullet* bullet = new Sun_bullet();
 
 		Vector2 bullet_position;
 		const Vector2& bullet_size = bullet->get_size();
@@ -99,14 +104,40 @@ public:
 		bullet->set_callback([&]() { mp += 35; });
 
 		bullet_list.push_back(bullet);
+
+		std::cout << "太阳普通子弹生成发射" << std::endl;
 	}
 
 	void on_attack_ex() override
 	{
 		is_attacking_ex = true;
 		is_sun_text_visible = true;
+
+		animation_sun_text.reset(); // 重置日字动画状态，使其从第一帧开始播放
 		is_facing_right ? animation_attack_ex_right.reset() : animation_attack_ex_left.reset();
-		is_sun_text_visible = true; // 显示头顶日字动画
+
+		Bullet* bullet = new Sun_bullet_ex();
+		Player* target_player = (id == Player_id::P1) ? player_2 : player_1;
+
+		// 通过计算使子弹水平居中于目标玩家，并从屏幕上方开始下落的初始位置和速度
+		Vector2 bullet_position;
+		Vector2 bullet_velocity;
+		const Vector2& bullet_size = bullet->get_size();
+		const Vector2& target_size = target_player->get_size();
+		const Vector2& target_position = target_player->get_position();
+		bullet_position.x = target_position.x + (target_size.x - bullet_size.x) / 2;
+		bullet_position.y = -size.y; // 从屏幕上方开始下落
+		bullet_velocity.x = 0;
+		bullet_velocity.y = speed_sun_ex;
+
+		bullet->set_position(bullet_position.x, bullet_position.y);
+		bullet->set_velocity(bullet_velocity.x, bullet_velocity.y);
+
+		bullet->set_callback([&]() { mp += 50; });
+		
+		bullet_list.push_back(bullet);
+
+		mciSendString(_T("play sun_text from 0"), NULL, 0, NULL);
 	}
 
 private:

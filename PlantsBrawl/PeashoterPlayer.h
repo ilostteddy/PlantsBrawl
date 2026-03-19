@@ -145,5 +145,7 @@ private:
 			});
 
 		bullet_list.push_back(bullet); // 将子弹添加到全局子弹列表中，供游戏循环更新和绘制
+
+		std::cout << "豌豆子弹生成发射" << std::endl;
 	}
 };

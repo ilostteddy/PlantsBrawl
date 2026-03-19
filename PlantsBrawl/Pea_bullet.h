@@ -1,4 +1,6 @@
-#pragma once
+﻿#pragma once
+
+#include <iostream>
 
 #include "Bullet.h"
 #include "Animation.h"
@@ -29,7 +31,7 @@ public:
 
     void on_collide() override
     {
-        Bullet::on_collide();
+		set_valid(false); // 碰撞后子弹失效
 
         switch (rand() % 3)
         {
@@ -63,9 +65,16 @@ public:
     void on_draw(const Camera& camera) override
     {
         if (valid)
-			putimage_alpha(camera, (int)position.x, (int)position.y, &img_pea); // 绘制豌豆子弹
+        {
+            putimage_alpha(camera, (int)position.x, (int)position.y, &img_pea); // 绘制豌豆子弹
+			std::cout << "豌豆子弹绘制" << std::endl;
+        }
         else
-			animation_break.on_draw(camera, (int)position.x, (int)position.y); // 绘制破碎动画
+        {
+            animation_break.on_draw(camera, (int)position.x, (int)position.y); // 绘制破碎动画
+        }
+			
+            
     }
 
 private:

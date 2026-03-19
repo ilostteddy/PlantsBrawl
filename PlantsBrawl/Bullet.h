@@ -107,7 +107,7 @@ protected:
 	int damage = 10;                                      // 子弹伤害	
 
 	bool valid = true;                                    // 子弹是否有效（未碰撞或未超出边界）
-	bool can_remove = true;                               // 子弹是否可以被移除（碰撞后或超出边界）
+	bool can_remove = false;                               // 子弹是否可以被移除（碰撞后或超出边界）
 
 	std::function<void()> callback;                       // 碰撞回调函数，子弹与目标碰撞时调用
 

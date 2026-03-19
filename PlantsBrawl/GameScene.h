@@ -84,6 +84,25 @@ public:
 	{
 		player_1->on_update(delta);
 		player_2->on_update(delta);
+
+		main_camera.on_update(delta);
+
+		// C++ 标准的 `erase-remove_if` 惯用法
+		bullet_list.erase(std::remove_if(
+			bullet_list.begin(), bullet_list.end(),
+			[](const Bullet* bullet)
+			{
+				bool deletable = bullet->check_can_remove();
+				if (deletable)
+					delete bullet; // 删除子弹对象，释放内存
+				return deletable;
+			}),
+			bullet_list.end());
+
+		for (Bullet* bullet : bullet_list)
+		{
+			bullet->on_update(delta);
+		}
 	};
 
 	void on_draw(const Camera& camera) override
@@ -105,6 +124,11 @@ public:
 
 		player_1->on_draw(camera);
 		player_2->on_draw(camera);
+
+		for (Bullet* bullet : bullet_list)
+		{
+			bullet->on_draw(camera);
+		}
 	};
 
 	void on_input(const ExMessage& msg) override 

@@ -12,6 +12,8 @@
 #include "Platform.h"
 #include "Time.h"
 #include "Bullet.h"
+#include "Pea_bullet.h"
+#include "Sun_bullet.h"
 
 extern std::vector<Bullet*> bullet_list; // 声明子弹列表，供Player类使用
 extern std::vector<Platform> platform_list; // 声明平台列表，供Player类使用
@@ -216,11 +218,7 @@ public:
 
 	virtual void on_attack()
 	{
-		if (can_attack)
-		{
-			can_attack = false;
-			timer_attack_cd.restart();
-		}
+
 	}
 
 	virtual void on_attack_ex()
@@ -228,6 +226,15 @@ public:
 
 	}
 
+	virtual const Vector2 get_position() const
+	{
+		return position;
+	}
+
+	virtual const Vector2 get_size() const
+	{
+		return size;
+	}
 
 protected:
 	void move_and_collide(int delta)
@@ -255,6 +262,21 @@ protected:
 						break; // 处理完一个平台的碰撞后就退出循环，避免重复处理多个平台造成位置错误
 					}
 				}
+			}
+		}
+
+		for (Bullet* bullet : bullet_list)
+		{
+			// 如果子弹无效或目标不是当前玩家，跳过碰撞检测
+			if (!bullet->get_valid() || bullet->get_target() != id)
+				continue; 
+
+			// 检查子弹是否与玩家发生碰撞
+			if (bullet->check_collision(position, size))
+			{
+				bullet->on_collide();
+				bullet->set_valid(false); // 碰撞后子弹失效
+				hp -= bullet->get_damage(); // 扣除玩家生命值
 			}
 		}
 	}
