@@ -74,7 +74,7 @@ public:
             animation_break.on_draw(camera, (int)position.x, (int)position.y); // 绘制破碎动画
         }
 			
-            
+		Bullet::on_draw(camera); // 调用基类的调试绘制    
     }
 
 private:

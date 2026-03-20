@@ -146,6 +146,7 @@
     <ClInclude Include="Scene.h" />
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="SelectorScene.h" />
+    <ClInclude Include="StatusBar.h" />
     <ClInclude Include="SunflowerPlayer.h" />
     <ClInclude Include="Sun_bullet.h" />
     <ClInclude Include="Sun_bullet_ex.h" />

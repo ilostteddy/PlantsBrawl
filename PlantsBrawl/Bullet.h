@@ -7,6 +7,8 @@
 #include "Vector2.h"
 #include "Camera.h"
 
+extern bool is_debug;
+
 class Bullet
 {
 public:
@@ -15,7 +17,18 @@ public:
 
 
 	virtual void on_update(int delta_time) {};
-	virtual void on_draw(const Camera& camera) {};
+
+	virtual void on_draw(const Camera& camera) 
+	{
+		if (is_debug)
+		{
+			setfillcolor(RGB(255, 255, 255));
+			setlinecolor(RGB(255, 255, 255));
+			rectangle((int)position.x, (int)position.y,
+				(int)(position.x + size.x), (int)(position.y + size.y));
+			solidcircle((int)(position.x + size.x / 2), (int)(position.y + size.y / 2), 5);
+		}
+	};
 
 	virtual void on_collide()                             // 碰撞处理函数，子弹与目标碰撞时调用
 	{

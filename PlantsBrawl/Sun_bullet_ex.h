@@ -74,6 +74,8 @@ public:
 			animation_explode.on_draw(camera,
 				(int)(position.x + explosion_render_offset.x),
 				(int)(position.y + explosion_render_offset.y));
+
+		Bullet::on_draw(camera);
 	};
 
 private:

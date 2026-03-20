@@ -11,6 +11,7 @@
 #include "PeashoterPlayer.h"
 #include "SunflowerPlayer.h"
 #include "Vector2.h"
+#include "StatusBar.h"
 
 extern std::vector<Platform> platform_list;
 extern IMAGE img_sky;
@@ -111,6 +112,9 @@ public:
 		putimage_alpha(pos_img_sky.x, pos_img_sky.y, &img_sky);
 		putimage_alpha(pos_img_sky.x, pos_img_sky.y, &img_hills);
 
+		status_bar_1P.on_draw();
+		status_bar_2P.on_draw();
+
 		for (Platform& platform : platform_list)
 		{
 			platform.on_draw(camera);
@@ -156,4 +160,7 @@ public:
 private:
 	POINT pos_img_sky = { 0, 0 }; // 天空图片位置
 	POINT pos_img_hills = { 0, 0 }; // 山脉图片位置
+
+	StatusBar status_bar_1P;
+	StatusBar status_bar_2P;
 };

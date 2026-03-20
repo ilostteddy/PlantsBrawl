@@ -95,5 +95,8 @@
     <ClInclude Include="Sun_bullet_ex.h">
       <Filter>头文件\Bullet</Filter>
     </ClInclude>
+    <ClInclude Include="StatusBar.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

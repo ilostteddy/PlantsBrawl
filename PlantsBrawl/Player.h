@@ -14,9 +14,12 @@
 #include "Bullet.h"
 #include "Pea_bullet.h"
 #include "Sun_bullet.h"
+#include "util.h"
 
 extern std::vector<Bullet*> bullet_list; // 声明子弹列表，供Player类使用
 extern std::vector<Platform> platform_list; // 声明平台列表，供Player类使用
+
+extern bool is_debug;
 
 class Player
 {
@@ -30,9 +33,20 @@ public:
 		timer_attack_cd.set_callback([&]()
 			{
 				can_attack = true; // 攻击冷却结束后允许攻击
-			}
-		);
+			});
 
+		timer_invulnerable.set_wait_time(750);
+		timer_invulnerable.set_one_shot(true);
+		timer_invulnerable.set_callback([&]()
+			{
+				is_invulnerable = false; // 无敌状态结束后取消无敌
+			});
+
+		timer_invulnerable_blink.set_wait_time(75);
+		timer_invulnerable_blink.set_callback([&]()
+			{
+				is_showing_sketch_frame = !is_showing_sketch_frame; // 无敌状态闪烁切换显示状态
+			});
 	};
 
 	~Player() = default;
@@ -43,7 +57,8 @@ public:
 
 		if (direction != 0)
 		{
-			is_facing_right = direction > 0;
+			if (!is_attacking_ex)  // 如果不是特殊攻击状态，才根据方向切换动画
+				is_facing_right = direction > 0;
 			current_animation = is_facing_right ? &animation_run_right : &animation_run_left; // 根据方向选择跑步动画
 			float distance = run_velocity * delta * direction; // 计算移动距离
 			on_run(distance);
@@ -53,11 +68,23 @@ public:
 			current_animation = is_facing_right ? &animation_idle_right : &animation_idle_left; // 根据方向选择默认动画
 		}
 
+		// 在当前动画更新时，根据当前的特殊攻击状态，来决定是否播放对应放心的动画
+		if (is_attacking_ex)
+		{
+			current_animation = is_facing_right ? &animation_attack_ex_right : &animation_attack_ex_left;
+		}
+
 		current_animation->on_update(delta); // 更新当前动画状态
 
 		timer_attack_cd.on_update(delta); // 更新攻击冷却计时器状态
+		timer_invulnerable.on_update(delta); // 更新无敌状态计时器状态
+		timer_invulnerable_blink.on_update(delta); // 更新无敌状态闪烁计时器状态
+
+		if (is_invulnerable)
+			sketch_image(current_animation->get_frame(), &img_sketch); // 如果处于无敌状态，生成当前帧的剪影图像
 
 		move_and_collide(delta); // 更新位置并处理碰撞
+
 	};
 
 	virtual void on_input(const ExMessage& msg) // 场景输入事件时调用，参数为输入事件消息
@@ -188,7 +215,16 @@ public:
 
 	virtual void on_draw(const Camera& camera) // 场景绘制时调用，参数为当前摄像机对象
 	{
-		current_animation->on_draw(camera, (int)position.x, (int)position.y); // 绘制当前动画的当前帧，位置根据角色位置计算
+		if (hp > 0 && is_invulnerable && is_showing_sketch_frame)
+			putimage_alpha(camera, (int)position.x, (int)position.y, &img_sketch);
+		else
+			current_animation->on_draw(camera, (int)position.x, (int)position.y); // 绘制当前动画的当前帧，位置根据角色位置计算
+	
+		if (is_debug)
+		{
+			setlinecolor(RGB(0, 125, 255));
+			rectangle((int)position.x, (int)position.y, (int)(position.x + size.x), (int)(position.y + size.y));
+		}
 	}
 
 	void set_id(Player_id id) // 设置玩家序号
@@ -236,6 +272,12 @@ public:
 		return size;
 	}
 
+	void make_invulnerable() // 使玩家进入无敌状态
+	{
+		is_invulnerable = true; // 设置无敌状态标志
+		timer_invulnerable.restart(); // 重置无敌状态计时器
+	}
+
 protected:
 	void move_and_collide(int delta)
 	{
@@ -264,19 +306,22 @@ protected:
 				}
 			}
 		}
-
-		for (Bullet* bullet : bullet_list)
+		if (!is_invulnerable)
 		{
-			// 如果子弹无效或目标不是当前玩家，跳过碰撞检测
-			if (!bullet->get_valid() || bullet->get_target() != id)
-				continue; 
-
-			// 检查子弹是否与玩家发生碰撞
-			if (bullet->check_collision(position, size))
+			for (Bullet* bullet : bullet_list)
 			{
-				bullet->on_collide();
-				bullet->set_valid(false); // 碰撞后子弹失效
-				hp -= bullet->get_damage(); // 扣除玩家生命值
+				// 如果子弹无效或目标不是当前玩家，跳过碰撞检测
+				if (!bullet->get_valid() || bullet->get_target() != id)
+					continue;
+
+				// 检查子弹是否与玩家发生碰撞
+				if (bullet->check_collision(position, size))
+				{
+					make_invulnerable(); // 进入无敌状态，避免连续被同一子弹多次扣血
+					bullet->on_collide();
+					bullet->set_valid(false); // 碰撞后子弹失效
+					hp -= bullet->get_damage(); // 扣除玩家生命值
+				}
 			}
 		}
 	}
@@ -311,6 +356,12 @@ protected:
 	Time timer_attack_cd; // 普通攻击冷却计时器
 
 	bool is_attacking_ex = false; // 是否正在释放特殊攻击
+
+	IMAGE img_sketch;
+	bool is_invulnerable = false; // 是否处于无敌状态
+	bool is_showing_sketch_frame = false; // 当前帧是否应该显示剪影
+	Time timer_invulnerable; // 无敌状态计时器
+	Time timer_invulnerable_blink; // 无敌状态闪烁计时器
 
 	int hp = 100; // 角色生命值
 	int mp = 0; // 角色魔法值
