@@ -15,6 +15,7 @@
 #include "Pea_bullet.h"
 #include "Sun_bullet.h"
 #include "util.h"
+#include "Particle.h"
 
 extern std::vector<Bullet*> bullet_list; // 声明子弹列表，供Player类使用
 extern std::vector<Platform> platform_list; // 声明平台列表，供Player类使用
@@ -47,6 +48,28 @@ public:
 			{
 				is_showing_sketch_frame = !is_showing_sketch_frame; // 无敌状态闪烁切换显示状态
 			});
+
+		// 设置跑步特效生成计时器，持续生成跑步特效粒子
+		timer_run_effect_generation.set_wait_time(75);
+		timer_run_effect_generation.set_callback([&]()
+			{
+				Vector2 particle_position;
+				IMAGE* frame = atlas_run_effect.get_image(0);
+				particle_position.x = position.x + (size.x - frame->getwidth()) / 2;
+				particle_position.y = position.y + size.y - frame->getheight();
+				particle_list.emplace_back(particle_position, &atlas_run_effect, 45);
+			});
+
+		// 死亡粒子生成计时器，持续生成死亡特效粒子
+		timer_die_effect_generation.set_wait_time(35);
+		timer_die_effect_generation.set_callback([&]()
+			{
+				Vector2 particle_position;
+				IMAGE* frame = atlas_run_effect.get_image(0);
+				particle_position.x = position.x + (size.x - frame->getwidth()) / 2;
+				particle_position.y = position.y + size.y - frame->getheight();
+				particle_list.emplace_back(particle_position, &atlas_run_effect, 150);
+			});
 	};
 
 	~Player() = default;
@@ -66,6 +89,7 @@ public:
 		else
 		{
 			current_animation = is_facing_right ? &animation_idle_right : &animation_idle_left; // 根据方向选择默认动画
+			timer_run_effect_generation.pause(); // 停止生成跑步特效粒子
 		}
 
 		// 在当前动画更新时，根据当前的特殊攻击状态，来决定是否播放对应放心的动画
@@ -79,9 +103,31 @@ public:
 		timer_attack_cd.on_update(delta); // 更新攻击冷却计时器状态
 		timer_invulnerable.on_update(delta); // 更新无敌状态计时器状态
 		timer_invulnerable_blink.on_update(delta); // 更新无敌状态闪烁计时器状态
+		timer_run_effect_generation.on_update(delta); // 更新跑步特效生成计时器状态
 
+		if (hp <=0)
+		{
+			timer_die_effect_generation.resume(); // 角色死亡，开始生成死亡特效粒子
+		}
+
+		// 移除无效的粒子
+		particle_list.erase(std::remove_if(
+			particle_list.begin(), particle_list.end(),
+			[](const Particle& particle)
+			{
+				return !particle.check_valid();
+			}),
+			particle_list.end());
+
+		// 更新剩余粒子状态
+		for (Particle& particle : particle_list)
+		{
+			particle.on_update(delta);
+		}
+
+		// 如果处于无敌状态，生成当前帧的剪影图像
 		if (is_invulnerable)
-			sketch_image(current_animation->get_frame(), &img_sketch); // 如果处于无敌状态，生成当前帧的剪影图像
+			sketch_image(current_animation->get_frame(), &img_sketch); 
 
 		move_and_collide(delta); // 更新位置并处理碰撞
 
@@ -215,6 +261,11 @@ public:
 
 	virtual void on_draw(const Camera& camera) // 场景绘制时调用，参数为当前摄像机对象
 	{
+		for (const Particle& particle : particle_list)
+		{
+			particle.on_draw(camera);
+		}
+
 		if (hp > 0 && is_invulnerable && is_showing_sketch_frame)
 			putimage_alpha(camera, (int)position.x, (int)position.y, &img_sketch);
 		else
@@ -243,6 +294,8 @@ public:
 		if (is_attacking_ex)
 			return;
 		position.x += distance; // 根据移动距离更新角色位置
+		timer_run_effect_generation.resume();
+		std::cout << "timer_run_effect_generation" << std::endl;
 	}
 
 	void on_jump()
@@ -276,6 +329,16 @@ public:
 	{
 		is_invulnerable = true; // 设置无敌状态标志
 		timer_invulnerable.restart(); // 重置无敌状态计时器
+	}
+
+	int get_hp() const
+	{
+		return hp;
+	}
+
+	int get_mp() const
+	{
+		return mp;
 	}
 
 protected:
@@ -327,42 +390,47 @@ protected:
 	}
 
 protected:
-	Vector2 position;  // 角色位置
-	Vector2 size;      // 角色尺寸
-	Vector2 velocity;  // 角色速度
+	Vector2 position;                       // 角色位置
+	Vector2 size;                           // 角色尺寸
+	Vector2 velocity;                       // 角色速度
 
-	const float gravity = 1.6e-3f; // 重力加速度，单位为像素/毫秒^2 （修复：去掉空格，合法的浮点字面量）
-	const float run_velocity = 0.5f; // 跑步速度，单位为像素/毫秒
-	const float jump_velocity = -0.8f; // 跳跃初速度，单位为像素/毫秒
+	const float gravity = 1.6e-3f;          // 重力加速度，单位为像素/毫秒^2 （修复：去掉空格，合法的浮点字面量）
+	const float run_velocity = 0.5f;        // 跑步速度，单位为像素/毫秒
+	const float jump_velocity = -0.8f;      // 跳跃初速度，单位为像素/毫秒
 
-	Animation animation_idle_left;   // 向左默认动画
-	Animation animation_idle_right;  // 向右默认动画
-	Animation animation_run_left;    // 向左跑步动画
-	Animation animation_run_right;   // 向右跑步动画
-	Animation animation_attack_ex_left; // 大招向左攻击动画
-	Animation animation_attack_ex_right; // 大招向右攻击动画
+	Animation animation_idle_left;          // 向左默认动画
+	Animation animation_idle_right;         // 向右默认动画
+	Animation animation_run_left;           // 向左跑步动画
+	Animation animation_run_right;          // 向右跑步动画
+	Animation animation_attack_ex_left;     // 大招向左攻击动画
+	Animation animation_attack_ex_right;    // 大招向右攻击动画
 
 	Animation* current_animation = nullptr; // 当前动画指针
 
-	Player_id id = Player_id::P1; // 玩家序号 ID
+	Player_id id = Player_id::P1;           // 玩家序号 ID
 	 
-	bool if_leftkey_down = false;  // 是否按下左键
-	bool if_rightkey_down = false; // 是否按下右键
+	bool if_leftkey_down = false;           // 是否按下左键
+	bool if_rightkey_down = false;          // 是否按下右键
 
-	bool is_facing_right = true; // 是否面向右边，默认为true
+	bool is_facing_right = true;            // 是否面向右边，默认为true
 
-	int attack_cd = 500; // 普通攻击冷却时间，单位为毫秒
-	bool can_attack = true; // 是否可以释放普通攻击
-	Time timer_attack_cd; // 普通攻击冷却计时器
+	int attack_cd = 500;                    // 普通攻击冷却时间，单位为毫秒
+	bool can_attack = true;                 // 是否可以释放普通攻击
+	Time timer_attack_cd;                   // 普通攻击冷却计时器
 
-	bool is_attacking_ex = false; // 是否正在释放特殊攻击
+	bool is_attacking_ex = false;           // 是否正在释放特殊攻击
 
-	IMAGE img_sketch;
-	bool is_invulnerable = false; // 是否处于无敌状态
-	bool is_showing_sketch_frame = false; // 当前帧是否应该显示剪影
-	Time timer_invulnerable; // 无敌状态计时器
-	Time timer_invulnerable_blink; // 无敌状态闪烁计时器
+	IMAGE img_sketch;                       // 动画帧剪影图像，用于无敌状态闪烁效果
+	bool is_invulnerable = false;           // 是否处于无敌状态
+	bool is_showing_sketch_frame = false;   // 当前帧是否应该显示剪影
+	Time timer_invulnerable;                // 无敌状态计时器
+	Time timer_invulnerable_blink;          // 无敌状态闪烁计时器
 
-	int hp = 100; // 角色生命值
-	int mp = 0; // 角色魔法值
+	std::vector<Particle> particle_list;    // 粒子列表，用于存储角色相关的粒子效果（如跑步特效、攻击特效等）
+
+	Time timer_run_effect_generation;       // 跑步特效生成计时器
+	Time timer_die_effect_generation;       // 死亡特效生成计时器
+
+	int hp = 100;                           // 角色生命值
+	int mp = 0;                             // 角色魔法值
 };

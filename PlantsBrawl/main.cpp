@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <graphics.h>
 #include <windows.h>
 #include <conio.h>
@@ -26,6 +26,8 @@ Scene* selector_scene = nullptr;
 
 Player* player_1 = nullptr;
 Player* player_2 = nullptr;
+IMAGE* img_player_1_avatar = nullptr;
+IMAGE* img_player_2_avatar = nullptr;
 
 SceneManager scene_manager;
 
@@ -36,13 +38,17 @@ std::vector<Bullet*> bullet_list;
 
 int main() 
 {	
+	// 切换控制台到 UTF-8
+	SetConsoleOutputCP(CP_UTF8);
+	SetConsoleCP(CP_UTF8);
+
 	// 01 初始化部分
 	ExMessage msg;
 	const int FPS = 60;
 
-	load_game_resources(); // 加载游戏资源，例如图片、动画等
-
 	initgraph(1280, 720);
+
+	load_game_resources(); // 加载游戏资源，例如图片、动画等
 
 	settextstyle(24, 0, _T("Flx")); // 设置全局文本样式，使用加载的 Flx 字体
 	setbkmode(TRANSPARENT); // 设置文本背景模式为透明

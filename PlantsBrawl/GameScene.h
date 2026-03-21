@@ -12,6 +12,7 @@
 #include "SunflowerPlayer.h"
 #include "Vector2.h"
 #include "StatusBar.h"
+#include "Resources.h"
 
 extern std::vector<Platform> platform_list;
 extern IMAGE img_sky;
@@ -26,6 +27,9 @@ extern Camera main_camera;
 
 extern SceneManager scene_manager;
 
+extern IMAGE* img_player_1_avatar;
+extern IMAGE* img_player_2_avatar;
+
 class GameScene : public Scene
 {
 public:
@@ -37,6 +41,13 @@ public:
 		// 初始化玩家位置
 		player_1->set_position(200, 50);
 		player_2->set_position(975, 50);
+
+		// 初始化头像和状态栏
+		status_bar_1P.set_avatar(img_player_1_avatar);
+		status_bar_1P.set_position(235, 625);
+
+		status_bar_2P.set_avatar(img_player_2_avatar);
+		status_bar_2P.set_position(675, 625);
 
 		// 计算天空和山脉图片的居中位置
 		pos_img_sky.x = (getwidth() - img_sky.getwidth()) / 2;
@@ -104,6 +115,13 @@ public:
 		{
 			bullet->on_update(delta);
 		}
+
+		status_bar_1P.set_hp(player_1->get_hp());
+		status_bar_1P.set_mp(player_1->get_mp());
+
+		status_bar_2P.set_hp(player_2->get_hp());
+		status_bar_2P.set_mp(player_2->get_mp());
+
 	};
 
 	void on_draw(const Camera& camera) override
@@ -111,9 +129,6 @@ public:
 		// 山脉和天空背景绘制
 		putimage_alpha(pos_img_sky.x, pos_img_sky.y, &img_sky);
 		putimage_alpha(pos_img_sky.x, pos_img_sky.y, &img_hills);
-
-		status_bar_1P.on_draw();
-		status_bar_2P.on_draw();
 
 		for (Platform& platform : platform_list)
 		{
@@ -133,6 +148,9 @@ public:
 		{
 			bullet->on_draw(camera);
 		}
+
+		status_bar_1P.on_draw();
+		status_bar_2P.on_draw();
 	};
 
 	void on_input(const ExMessage& msg) override 

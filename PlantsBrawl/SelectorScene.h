@@ -18,6 +18,9 @@ extern Player* player_2;
 
 extern SceneManager scene_manager;
 
+extern IMAGE* img_player_1_avatar;
+extern IMAGE* img_player_2_avatar;
+
 class SelectorScene : public Scene
 {
 public:
@@ -264,10 +267,11 @@ public:
 		{
 		case PlayerType::Peashooter:
 			player_1 = new PeashooterPlayer();
-
+			img_player_1_avatar = &img_avatar_peashooter;
 			break;
 		case PlayerType::Sunflower:
 			player_1 = new SunflowerPlayer();
+			img_player_1_avatar = &img_avatar_sunflower;
 			break;
 		}
 		player_1->set_id(Player_id::P1); // 设置 1P 玩家序号
@@ -276,12 +280,16 @@ public:
 		{
 		case PlayerType::Peashooter:
 			player_2 = new PeashooterPlayer();
+			img_player_2_avatar = &img_avatar_peashooter;
 			break;
 		case PlayerType::Sunflower:
 			player_2 = new SunflowerPlayer();
+			img_player_2_avatar = &img_avatar_sunflower;
 			break;
 		}
 		player_2->set_id(Player_id::P2); // 设置 2P 玩家序号
+
+		std::cout << "SelectorScene::on_exit triggered: player types = " << (int)player_type_1 << ", " << (int)player_type_2 << std::endl;
 	};
  
 private:

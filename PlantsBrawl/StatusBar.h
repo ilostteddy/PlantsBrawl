@@ -1,6 +1,7 @@
-#pragma once
+﻿#pragma once
 
 #include <graphics.h>
+#include <iostream>
 
 #include "util.h"
 
@@ -51,6 +52,8 @@ public:
 
 		setfillcolor(RGB(83, 131, 195));
 		solidroundrect(position.x + 100, position.y + 45, position.x + 100 + (int)mp_bar_width + 3, position.y + 68, 8, 8);
+
+		
 	}
 
 private:

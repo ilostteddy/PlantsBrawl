@@ -31,6 +31,10 @@ public:
 
     void on_collide() override
     {
+        // 触发外部注册的回调（加 mp）
+        if (callback)
+            callback();
+
 		set_valid(false); // 碰撞后子弹失效
 
         switch (rand() % 3)
