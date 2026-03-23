@@ -279,17 +279,19 @@ public:
 		switch (player_type_2)
 		{
 		case PlayerType::Peashooter:
-			player_2 = new PeashooterPlayer();
+			player_2 = new PeashooterPlayer(false);
 			img_player_2_avatar = &img_avatar_peashooter;
 			break;
 		case PlayerType::Sunflower:
-			player_2 = new SunflowerPlayer();
+			player_2 = new SunflowerPlayer(false);
 			img_player_2_avatar = &img_avatar_sunflower;
 			break;
 		}
 		player_2->set_id(Player_id::P2); // 设置 2P 玩家序号
 
 		std::cout << "SelectorScene::on_exit triggered: player types = " << (int)player_type_1 << ", " << (int)player_type_2 << std::endl;
+
+		mciSendString(_T("stop gbm_menu"), NULL, 0, NULL); // 停止选角界面背景音乐
 	};
  
 private:

@@ -152,7 +152,7 @@ void load_game_resources()
 
 	loadimage(&img_1P_winner, _T("resources/1P_winner.png"));
 	loadimage(&img_2P_winner, _T("resources/2P_winner.png"));
-	loadimage(&img_winner_bar, _T("resources/winner_bar.png"));
+	loadimage(&img_winner_bar, _T("resources/winnner_bar.png"));
 
 	loadimage(&img_avatar_peashooter, _T("resources/avatar_peashooter.png"));
 	loadimage(&img_avatar_sunflower, _T("resources/avatar_sunflower.png"));

@@ -53,7 +53,8 @@ public:
 		pass_time += delta;
 		if (pass_time >= wait_time)
 		{
-			if((!one_shot || (one_shot && !shotted) && callback))
+			// 如果满足触发条件（单次触发且未触发过，或非单次触发），则调用回调函数
+			if ((!one_shot || (one_shot && !shotted) && callback))
 				callback();
 			shotted = true;
 			pass_time = 0; // 重置已过时间

@@ -25,9 +25,9 @@ extern bool is_debug;
 class Player
 {
 public:
-	Player()
+	Player(bool facing_right = true) : is_facing_right(facing_right)
 	{
-		current_animation = &animation_idle_right; // 默认朝右站立
+		current_animation = is_facing_right ? &animation_idle_right : &animation_idle_left; // 根据初始朝向选择默认动画
 
 		timer_attack_cd.set_wait_time(attack_cd);
 		timer_attack_cd.set_one_shot(true);
@@ -70,6 +70,29 @@ public:
 				particle_position.y = position.y + size.y - frame->getheight();
 				particle_list.emplace_back(particle_position, &atlas_run_effect, 150);
 			});
+
+		animation_jump_effect.set_atlas(&atlas_jump_effect);
+		animation_jump_effect.set_interval(25);
+		animation_jump_effect.set_loop(false);
+		animation_jump_effect.set_callback([&]()
+			{
+				is_jump_effect_visible = false;
+			});
+
+		animation_land_effect.set_atlas(&atlas_land_effect);
+		animation_land_effect.set_interval(50);
+		animation_land_effect.set_loop(false);
+		animation_land_effect.set_callback([&]()
+			{
+				is_land_effect_visible = false;
+			});
+
+		timer_cursor_visibility.set_wait_time(2500);
+		timer_cursor_visibility.set_one_shot(true);
+		timer_cursor_visibility.set_callback([&]()
+			{
+				is_cursor_visible = false;
+			});
 	};
 
 	~Player() = default;
@@ -92,18 +115,28 @@ public:
 			timer_run_effect_generation.pause(); // 停止生成跑步特效粒子
 		}
 
-		// 在当前动画更新时，根据当前的特殊攻击状态，来决定是否播放对应放心的动画
+		// 在当前动画更新时，根据当前的特殊攻击状态，来决定是否播放对应的动画
 		if (is_attacking_ex)
 		{
 			current_animation = is_facing_right ? &animation_attack_ex_right : &animation_attack_ex_left;
 		}
 
+		// 在当前生命值归0时，选择播放对应动画
+		if (hp <= 0)
+		{
+			current_animation = last_hurt_direction.x < 0 ? &animation_die_left : &animation_die_right;
+		}
+
 		current_animation->on_update(delta); // 更新当前动画状态
+
+		animation_jump_effect.on_update(delta); // 更新跳跃特效动画状态
+		animation_land_effect.on_update(delta); // 更新着陆特效动画状态
 
 		timer_attack_cd.on_update(delta); // 更新攻击冷却计时器状态
 		timer_invulnerable.on_update(delta); // 更新无敌状态计时器状态
 		timer_invulnerable_blink.on_update(delta); // 更新无敌状态闪烁计时器状态
 		timer_run_effect_generation.on_update(delta); // 更新跑步特效生成计时器状态
+		timer_cursor_visibility.on_update(delta); // 玩家光标指示器可见性定时器
 
 		if (hp <=0)
 		{
@@ -130,6 +163,8 @@ public:
 			sketch_image(current_animation->get_frame(), &img_sketch); 
 
 		move_and_collide(delta); // 更新位置并处理碰撞
+
+
 
 	};
 
@@ -261,6 +296,35 @@ public:
 
 	virtual void on_draw(const Camera& camera) // 场景绘制时调用，参数为当前摄像机对象
 	{
+		if (is_cursor_visible)
+		{
+			switch (id)
+			{
+			case Player_id::P1:
+				putimage_alpha(
+					camera,
+					(int)(position.x + (size.x - img_1P_cursor.getwidth()) / 2),
+					(int)(position.y - img_1P_cursor.getheight()),
+					&img_1P_cursor
+				);
+				break;
+
+			case Player_id::P2:
+				putimage_alpha(
+					camera,
+					(int)(position.x + (size.x - img_2P_cursor.getwidth()) / 2),
+					(int)(position.y - img_2P_cursor.getheight()),
+					&img_2P_cursor
+				);
+				break;
+			}
+		}
+		
+		if (is_jump_effect_visible)
+			animation_jump_effect.on_draw(camera, (int)position_jump_effct.x, (int)position_jump_effct.y);
+		if (is_land_effect_visible)
+			animation_land_effect.on_draw(camera, (int)position_land_effect.x, (int)position_land_effect.y);
+
 		for (const Particle& particle : particle_list)
 		{
 			particle.on_draw(camera);
@@ -303,6 +367,23 @@ public:
 		if (velocity.y !=0 || is_attacking_ex)
 			return; // 如果垂直速度不为0，说明角色正在空中，不能再次跳跃
 		velocity.y += jump_velocity; // 设置垂直速度为负值，使角色向上跳跃
+
+		is_jump_effect_visible = true; // 显示跳跃特效
+		animation_jump_effect.reset(); // 重置跳跃特效动画状态，从第一帧开始播放
+
+		IMAGE* effect_frame = animation_jump_effect.get_frame(); // 获取当前跳跃特效动画帧图像
+		position_jump_effct.x = position.x + (size.x - effect_frame->getwidth()) / 2; // 将跳跃特效水平居中于角色
+		position_jump_effct.y = position.y + size.y - effect_frame->getheight(); // 将跳跃特效垂直位置设置在角色脚底附近
+	}
+
+	void on_land()
+	{
+		is_land_effect_visible = true; // 显示落地特效
+		animation_land_effect.reset(); // 重置落地特效动画状态，从第一帧开始播放
+
+		IMAGE* effect_frame = animation_land_effect.get_frame();
+		position_land_effect.x = position.x + (size.x - effect_frame->getwidth()) / 2;
+		position_land_effect.y = position.y + size.y - effect_frame->getheight();
 	}
 
 	virtual void on_attack()
@@ -331,12 +412,17 @@ public:
 		timer_invulnerable.restart(); // 重置无敌状态计时器
 	}
 
+	void set_hp(int val)
+	{
+		hp = val;
+	}
+
 	int get_hp() const
 	{
 		return hp;
 	}
 
-	int get_mp() const
+	int get_mp() const 
 	{
 		return mp;
 	}
@@ -344,8 +430,13 @@ public:
 protected:
 	void move_and_collide(int delta)
 	{
+		float last_velocity_y = velocity.y; // 记录上一帧的垂直速度，供碰撞检测使用
+
 		velocity.y += gravity * delta; // 应用重力加速度更新垂直速度
 		position += velocity * (float)delta; // 根据速度和时间增量更新位置
+
+		if (hp <= 0)
+			return; // 如果角色已经死亡，不再处理碰撞
 
 		if (velocity.y > 0) // 如果垂直速度大于0，表示角色正在下落
 		{
@@ -363,6 +454,9 @@ protected:
 					{
 						position.y = shape.y - size.y; // 将玩家角色的位置调整到平台上
 						velocity.y = 0; // 碰撞后垂直速度归零
+
+						if (last_velocity_y != 0)
+							on_land(); // 如果上一帧的垂直速度不为0，说明玩家角色是从空中落到平台上的，触发落地逻辑	
 
 						break; // 处理完一个平台的碰撞后就退出循环，避免重复处理多个平台造成位置错误
 					}
@@ -384,6 +478,12 @@ protected:
 					bullet->on_collide();
 					bullet->set_valid(false); // 碰撞后子弹失效
 					hp -= bullet->get_damage(); // 扣除玩家生命值
+					last_hurt_direction = bullet->get_position() - position; // 记录受击方向，供玩家死亡时使用
+					if (hp <= 0)
+					{
+						velocity.x = last_hurt_direction.x < 0 ? 0.3f : -0.3f; // 根据受击方向设置死亡时的水平速度，向右受击则向右飞出，向左受击则向左飞出
+						velocity.y = -0.5f; // 设置死亡时的垂直速度，使角色向上飞出
+					}
 				}
 			}
 		}
@@ -393,6 +493,8 @@ protected:
 	Vector2 position;                       // 角色位置
 	Vector2 size;                           // 角色尺寸
 	Vector2 velocity;                       // 角色速度
+	Vector2 position_jump_effct;            // 跳跃特效位置
+	Vector2 position_land_effect;           // 落地特效位置
 
 	const float gravity = 1.6e-3f;          // 重力加速度，单位为像素/毫秒^2 （修复：去掉空格，合法的浮点字面量）
 	const float run_velocity = 0.5f;        // 跑步速度，单位为像素/毫秒
@@ -404,10 +506,17 @@ protected:
 	Animation animation_run_right;          // 向右跑步动画
 	Animation animation_attack_ex_left;     // 大招向左攻击动画
 	Animation animation_attack_ex_right;    // 大招向右攻击动画
+	Animation animation_jump_effect;         // 跳跃特效动画
+	Animation animation_land_effect;         // 落地特效动画
+	Animation animation_die_left;         // 向左死亡动画
+	Animation animation_die_right;        // 向右死亡动画
 
 	Animation* current_animation = nullptr; // 当前动画指针
 
 	Player_id id = Player_id::P1;           // 玩家序号 ID
+
+	bool is_jump_effect_visible = false;          // 跳跃特效是否可见
+	bool is_land_effect_visible = false;          // 落地特效是否可见
 	 
 	bool if_leftkey_down = false;           // 是否按下左键
 	bool if_rightkey_down = false;          // 是否按下右键
@@ -433,4 +542,10 @@ protected:
 
 	int hp = 100;                           // 角色生命值
 	int mp = 0;                             // 角色魔法值
+
+	bool is_cursor_visible = true;                 // 玩家光标指示器是否显示
+	Time timer_cursor_visibility;              // 玩家光标指示器可见性定时器
+
+	Vector2 last_hurt_direction;			// 玩家生命值归0时的受击方向
+
 };

@@ -16,7 +16,7 @@ extern Camera main_camera;
 class PeashooterPlayer : public Player
 {
 public:
-	PeashooterPlayer()
+	PeashooterPlayer(bool facing_right = true) : Player(facing_right)
 	{
 		// 初始化豌豆射手的动画
 		animation_idle_left.set_atlas(&atlas_peashooter_idle_left);
@@ -25,6 +25,8 @@ public:
 		animation_run_right.set_atlas(&atlas_peashooter_run_right);
 		animation_attack_ex_left.set_atlas(&atlas_peashooter_attack_ex_left);
 		animation_attack_ex_right.set_atlas(&atlas_peashooter_attack_ex_right);
+		animation_die_left.set_atlas(&atlas_peashooter_die_left);
+		animation_die_right.set_atlas(&atlas_peashooter_die_right);	
 
 		// 初始化动画帧间隔
 		animation_idle_left.set_interval(75);
@@ -33,6 +35,11 @@ public:
 		animation_run_right.set_interval(75);
 		animation_attack_ex_left.set_interval(75);
 		animation_attack_ex_right.set_interval(75);
+		animation_die_right.set_interval(150);
+		animation_die_left.set_interval(150);
+
+		animation_die_left.set_loop(false); // 死亡动画不循环
+		animation_die_right.set_loop(false);
 
 		size.x = 96; // 设置角色宽度
 		size.y = 96; // 设置角色高度

@@ -38,6 +38,35 @@ public:
 
 	void on_enter() override 
 	{	
+		mciSendString(_T("play bgm_game repeat from 0"), NULL, 0, NULL); 
+
+		is_game_over = false;
+		is_slide_out_started = false;
+
+		pos_img_winner_bar.x = -img_winner_bar.getwidth();
+		pos_img_winner_bar.y = (getheight() - img_winner_bar.getheight()) / 2;
+		pos_x_img_winner_bar_dst = (getwidth() - img_winner_bar.getwidth()) / 2;
+
+		pos_img_winner_text.x = pos_img_winner_bar.x;
+		pos_img_winner_text.y = (getheight() - img_1P_winner.getheight()) / 2;
+		pos_x_img_winner_text_dst = (getwidth() - img_1P_winner.getwidth()) / 2;
+
+		timer_winner_slide_in.restart();
+		timer_winner_slide_in.set_wait_time(2500);
+		timer_winner_slide_in.set_one_shot(true);
+		timer_winner_slide_in.set_callback([&]()
+			{
+				is_slide_out_started = true;
+			});
+
+		timer_winner_slide_out.restart();
+		timer_winner_slide_out.set_wait_time(1000);
+		timer_winner_slide_out.set_one_shot(true);
+		timer_winner_slide_out.set_callback([&]()
+			{
+				scene_manager.switch_to(SceneManager::SceneType::Menu);
+			});
+		
 		// 初始化玩家位置
 		player_1->set_position(200, 50);
 		player_2->set_position(975, 50);
@@ -99,6 +128,7 @@ public:
 
 		main_camera.on_update(delta);
 
+		// 使用迭代器和lambda表达式，结合`std::remove_if`算法来移除无效的子弹对象
 		// C++ 标准的 `erase-remove_if` 惯用法
 		bullet_list.erase(std::remove_if(
 			bullet_list.begin(), bullet_list.end(),
@@ -116,11 +146,54 @@ public:
 			bullet->on_update(delta);
 		}
 
+		// 获取玩家位置给予玩家掉落检测
+		const Vector2& position_player_1 = player_1->get_position();
+		const Vector2& position_player_2 = player_2->get_position();
+
+		// 如果玩家掉落出屏幕底部，直接扣光HP
+		if (position_player_1.y >= getheight())
+			player_1->set_hp(0); 
+		if (position_player_2.y >= getheight())
+			player_2->set_hp(0);
+
+		// 测试弹出消息并退出
+		if (player_1->get_hp() <= 0 || player_2->get_hp() <= 0)
+		{
+			if (!is_game_over)
+			{
+				mciSendString(_T("stop bgm_game"), NULL, 0, NULL);
+				mciSendString(_T("play ui_win from 0"), NULL, 0, NULL);
+			}
+
+			is_game_over = true;
+		}
+
 		status_bar_1P.set_hp(player_1->get_hp());
 		status_bar_1P.set_mp(player_1->get_mp());
 
 		status_bar_2P.set_hp(player_2->get_hp());
 		status_bar_2P.set_mp(player_2->get_mp());
+
+		// 如果游戏结束，执行结算动效的更新逻辑
+		if (is_game_over)
+		{
+			pos_img_winner_bar.x += (int)(speed_winner_bar * delta);
+			pos_img_winner_text.x += (int)(speed_winner_text * delta);
+
+			if (!is_slide_out_started) // 根据当前是否滑出的标志，执行不同的逻辑
+			{
+				timer_winner_slide_in.on_update(delta);
+
+				// 如果当前滑入动画还未完成，则继续更新位置；如果已经完成，则保持在目标位置不动
+				if (pos_img_winner_bar.x > pos_x_img_winner_bar_dst)
+					pos_img_winner_bar.x = pos_x_img_winner_bar_dst;
+				if (pos_img_winner_text.x > pos_x_img_winner_text_dst)
+					pos_img_winner_text.x = pos_x_img_winner_text_dst;
+			}
+			else
+				// 如果已经开始滑出动画，则继续更新定时器，直到定时器触发切换场景
+				timer_winner_slide_out.on_update(delta);
+		}
 
 	};
 
@@ -141,8 +214,16 @@ public:
 			outtextxy(15, 15, _T("已开启调试模式，按 Q 键关闭"));
 		}
 
+
 		player_1->on_draw(camera);
 		player_2->on_draw(camera);
+
+		if (is_game_over)
+		{
+			putimage_alpha(pos_img_winner_bar.x, pos_img_winner_bar.y, &img_winner_bar);
+			putimage_alpha(pos_img_winner_text.x, pos_img_winner_text.y, player_1->get_hp() > 0 ? &img_1P_winner : &img_2P_winner);
+		}
+
 
 		for (Bullet* bullet : bullet_list)
 		{
@@ -170,9 +251,23 @@ public:
 		}
 	};
 
-	void on_exit() override 
+	void on_exit() override
 	{
+		// 1. 删除玩家对象（堆内存）
+		delete player_1;
+		player_1 = nullptr;
+		delete player_2;
+		player_2 = nullptr;
 
+		// 2. 关闭调试
+		is_debug = false;
+
+		// 3. 清空子弹容器（只清指针，不清对象）
+		// 正常游戏应该先循环 delete 所有 bullet 再 clear
+		bullet_list.clear();
+
+		// 4. 重置相机
+		main_camera.reset_position();
 	};
 
 private:
@@ -181,4 +276,18 @@ private:
 
 	StatusBar status_bar_1P;
 	StatusBar status_bar_2P;
+
+	bool is_game_over = false; // 游戏结束标志
+
+	const float speed_winner_bar = 3.0f;
+	const float speed_winner_text = 1.5f;
+
+	POINT pos_img_winner_bar = { 0 };    // 结算动效背景位置
+	POINT pos_img_winner_text = { 0 };  // 结算动效文本位置
+	int pos_x_img_winner_bar_dst = 0;   // 结算动效背景移动的目标位置
+	int pos_x_img_winner_text_dst = 0;  // 结算动效文本移动的目标位置
+
+	Time timer_winner_slide_in; // 结算动效滑入定时器
+	Time timer_winner_slide_out;  // 结算动效停留定时器
+	bool is_slide_out_started = false; // 是否开始滑出动画
 };

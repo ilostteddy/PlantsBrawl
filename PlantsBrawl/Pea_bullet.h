@@ -48,7 +48,7 @@ public:
         case 2:
             mciSendString(_T("play pea_break_3 from 0"), NULL, 0, NULL);
             break;
-        }
+        };
     }
 
     void on_update(int delta) override
